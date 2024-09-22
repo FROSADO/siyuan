@@ -1,0 +1,107 @@
+---
+name: Custom local build for windows
+on: 
+    push:
+        branches: [ main ]
+env:
+    package_json: "app/package.json"
+jobs:
+    prepare_local:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+            
+            - name: Extract version from package.json
+              uses: sergeysova/jq-action@v2
+              id: version
+              with:
+                cmd: 'jq .version ${{ env.package_json }} -r'
+            - name: Extract electronVersion from package.json
+              uses: sergeysova/jq-action@v2
+              id: electronVersion
+              with:
+                  cmd: "jq .devDependencies.electron ${{ env.package_json }} -r"
+      
+            - name: Extract packageManager from package.json
+              uses: sergeysova/jq-action@v2
+              id: packageManager
+              with:
+                  cmd: "jq .packageManager ${{ env.package_json }} -r"
+            
+
+    local-build:
+        needs: prepare_local
+        runs-on: windows-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+            - name: Set up MingGW
+              uses: msys2/setup-msys2@v2
+              with:
+                install: p7zip mingw-w64-x86_64-lua
+            - name: Simple ls
+              run: | 
+                  ls ${{ github.workspace}}
+                  pwd
+                  gcc --version
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                go-version-file: kernel/go.mod
+            
+            - name: Set up goversioninfo
+              run: go get github.com/josephspurrier/goversioninfo/cmd/goversioninfo && go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+              working-directory: kernel/
+              env:
+                  GO111MODULE: on
+                  CGO_ENABLED: 1
+                  GOOS: windows
+                  GOPATH: ${{ github.workspace }}/go
+                  GOARCH: amd64
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+
+            - name: Install Node pnpm
+              run: npm install -g ${{ needs.prepare_local.outputs.packageManager }}
+              working-directory: app
+
+            - name: Install Node Dependencies
+              run: pnpm install --no-frozen-lockfile
+              working-directory: app
+            
+            - name: Building UI
+              run: pnpm run build
+              working-directory: app
+        
+            - name: Remove Build Directory
+              uses: JesseTG/rm@v1.0.2
+              with:
+                path: app/build
+            - name: Remove Kernel Directory for Windows
+              uses: JesseTG/rm@v1.0.2
+              with:
+                path: app/kernel
+            - name: Generate Icon Resource and Properties/Version Info For Windows
+              run: ${{ github.workspace }}\go\bin\goversioninfo -platform-specific=true -icon="resource\icon.ico" -manifest="resource\goversioninfo.exe.manifest"
+              working-directory: kernel
+              
+            - name: Building Kernel
+              run: go build --tags fts5 -o "../app/kernel/SiYuan-Kernel.exe" -v -ldflags "-s -w -H=windowsgui -X kernel/util.Mode=prod"
+              working-directory: kernel
+              env:
+                GO111MODULE: on
+                CGO_ENABLED: 1
+                GOOS: windows
+                GOPATH: ${{ github.workspace }}/go
+                GOARCH: amd64
+            - name: Building Electron App
+              run: pnpm run dist
+              working-directory: app
+            - name: Copy build
+              run: |
+                cp app/build/siyuan-${{ needs.prepare_local.outputs.version }}-win.exe $env:TEMP
+
+        
