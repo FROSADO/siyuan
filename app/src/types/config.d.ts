@@ -312,6 +312,10 @@ declare namespace Config {
          * Whether to enable the inline math
          */
         inlineMath: boolean;
+        /**
+         * Whether to enable the inline strikethrough
+         */
+        inlineStrikethrough: boolean;
     }
 
     /**
@@ -337,6 +341,10 @@ declare namespace Config {
          * The default number of backlinks to mention
          */
         backmentionExpandCount: number;
+        /**
+         * Whether the backlink contains children
+         */
+        backlinkContainChildren: boolean;
         /**
          * The maximum length of the dynamic anchor text for block references
          */
@@ -1381,6 +1389,10 @@ declare namespace Config {
          * Timeout (unit: seconds)
          */
         timeout: number;
+        /**
+         * Concurrent requests.
+         */
+        concurrentReqs: number;
     }
 
     /**
@@ -1403,6 +1415,10 @@ declare namespace Config {
          * Timeout (unit: seconds)
          */
         timeout: number;
+        /**
+         * Concurrent requests.
+         */
+        concurrentReqs: number;
         /**
          * Username
          */
@@ -1630,7 +1646,7 @@ declare namespace Config {
         /**
          * Tab type
          */
-        type: string;
+        type: TDock | string;
     }
 
     /**
@@ -1766,6 +1782,10 @@ declare namespace Config {
          * Tab title
          */
         title?: string;
+        /**
+         * Tab recent view time
+         */
+        activeTime?: string;
     }
 
     /**
@@ -1855,7 +1875,7 @@ declare namespace Config {
         /**
          * (Editor) Actions to be performed after the tab is loaded
          */
-        action: string;
+        action: TProtyleAction;
         /**
          * (Editor) Block ID
          */
@@ -1987,20 +2007,20 @@ declare namespace Config {
          * - `0`: No grouping
          * - `1`: Group by document
          */
-        group: number;
-        hasReplace: boolean;
+        group?: number;
+        hasReplace?: boolean;
         /**
          * Readable path list
          */
-        hPath: string;
+        hPath?: string;
         /**
          * Search in the specified paths
          */
-        idPath: string[];
+        idPath?: string[];
         /**
          * Search content
          */
-        k: string;
+        k?: string;
         /**
          * Search scheme
          * - `0`: Keyword (default)
@@ -2009,7 +2029,7 @@ declare namespace Config {
          * - `3`: Regular expression
          * @default 0
          */
-        method: number;
+        method?: number;
         /**
          * Custom name of the query condition group
          */
@@ -2017,17 +2037,17 @@ declare namespace Config {
         /**
          * Current page number
          */
-        page: number;
+        page?: number;
         /**
          * Replace content
          */
-        r: string;
+        r?: string;
         /**
          * Whether to clear the search box after removing the currently used query condition group
          * 移除后需记录搜索内容 https://github.com/siyuan-note/siyuan/issues/7745
          */
         removed?: boolean;
-        replaceTypes: IUILayoutTabSearchConfigReplaceTypes;
+        replaceTypes?: IUILayoutTabSearchConfigReplaceTypes;
         /**
          * Search result sorting scheme
          * - `0`: Block type (default)
@@ -2040,8 +2060,8 @@ declare namespace Config {
          * - `7`: Descending by relevance
          * @default 0
          */
-        sort: number;
-        types: IUILayoutTabSearchConfigTypes;
+        sort?: number;
+        types?: IUILayoutTabSearchConfigTypes;
     }
 
     /**
@@ -2118,6 +2138,10 @@ declare namespace Config {
          * @default false
          */
         blockRef?: boolean;
+        /**
+         * Replace file annotation refs
+         */
+        fileAnnotationRef?: boolean;
         /**
          * Replace kdb elements
          * @default true

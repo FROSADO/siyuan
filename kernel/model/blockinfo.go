@@ -53,7 +53,7 @@ type AttrView struct {
 }
 
 func GetDocInfo(blockID string) (ret *BlockInfo) {
-	WaitForWritingFiles()
+	FlushTxQueue()
 
 	tree, err := LoadTreeByBlockID(blockID)
 	if err != nil {
@@ -125,7 +125,7 @@ func GetDocInfo(blockID string) (ret *BlockInfo) {
 }
 
 func GetDocsInfo(blockIDs []string, queryRefCount bool, queryAv bool) (rets []*BlockInfo) {
-	WaitForWritingFiles()
+	FlushTxQueue()
 
 	trees := filesys.LoadTrees(blockIDs)
 	for _, blockID := range blockIDs {
@@ -480,6 +480,11 @@ func buildBlockBreadcrumb(node *ast.Node, excludeTypes []string) (ret []*BlockPa
 
 		name = strings.ReplaceAll(name, editor.Caret, "")
 		name = util.EscapeHTML(name)
+
+		if parent == node {
+			name = ""
+		}
+
 		if add {
 			ret = append([]*BlockPath{{
 				ID:      id,
@@ -501,6 +506,11 @@ func buildBlockBreadcrumb(node *ast.Node, excludeTypes []string) (ret []*BlockPa
 			}
 
 			if ast.NodeHeading == b.Type && headingLevel > b.HeadingLevel {
+				if b.ParentIs(ast.NodeListItem) {
+					// 标题在列表下时不显示 https://github.com/siyuan-note/siyuan/issues/13008
+					continue
+				}
+
 				name = gulu.Str.SubStr(renderBlockText(b, excludeTypes), maxNameLen)
 				name = util.EscapeHTML(name)
 				ret = append([]*BlockPath{{
